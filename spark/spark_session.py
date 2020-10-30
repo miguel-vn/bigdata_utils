@@ -1,5 +1,4 @@
 import os
-from random import randint
 from subprocess import check_output
 
 from pyspark.sql import SparkSession
@@ -7,7 +6,8 @@ from pyspark.sql import SparkSession
 
 def get_spark_session(name: str, additional_conf: dict, get_optimal=False) -> SparkSession:
     """
-    Function creates configured Spark session
+    Function creates configured Spark session for Yarn
+
     :param name: spark application name
     :param additional_conf: dict of parameters to change default cluster settings
     :param get_optimal: if true it will:
@@ -15,6 +15,7 @@ def get_spark_session(name: str, additional_conf: dict, get_optimal=False) -> Sp
         - set 2 executors per node
         - default parallelism x2 of NumExecutors;
         - shuffle partitions - x4 of NumExecutors.
+
     :return: configured SparkSession
     """
 
@@ -24,12 +25,11 @@ def get_spark_session(name: str, additional_conf: dict, get_optimal=False) -> Sp
     os.environ['PATH'] = f"/bin:{os.environ['PATH']}"
 
     if get_optimal:
-        num_nodes_pattern = 'Total Nodes:'
-        num_nodes = check_output(f"yarn node -list | grep '{num_nodes_pattern}'",
+        num_nodes = check_output("yarn node -list | grep 'Total Nodes:'",
                                  shell=True) \
             .decode('utf-8') \
             .replace('\n', '') \
-            .replace(num_nodes_pattern, '')
+            .replace('Total Nodes:', '')
 
         additional_conf["spark.dynamicAllocation.maxExecutors"] = str(int(num_nodes) * 2)
         additional_conf["spark.default.parallelism"] = str(int(num_nodes) * 4)
@@ -42,8 +42,6 @@ def get_spark_session(name: str, additional_conf: dict, get_optimal=False) -> Sp
 
     for key, value in additional_conf.items():
         spark_session.config(key=key, value=value)
-
-    spark_session = spark_session.config('spark.ui.port', f'{randint(4040, 4099)}')
 
     spark_session = spark_session \
         .enableHiveSupport() \

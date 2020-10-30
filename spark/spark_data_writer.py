@@ -17,9 +17,9 @@ class SparkDataWriter:
 
     def checkpoint(self, df: DataFrame, filename: str) -> DataFrame:
         """
-        Метод для сохранения промежуточных результатов работы на HDFS
-        :param df: датафрейм, который требуется записать
-        :param filename: имя файла записи. Путь к директории сохранения должен быть указан в checkpoint_path
+        The method for make "checkpoint" on HDFS> Writes dataframe and returning it.
+        :param df: DataFrame for writing
+        :param filename: only name of file. Full path to directory need to be set in checkpoint_path
 
         :return: same DataFrame after writing on HDFS
         """
